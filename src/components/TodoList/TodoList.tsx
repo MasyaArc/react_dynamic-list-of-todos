@@ -4,10 +4,17 @@ import classNames from 'classnames';
 
 type Props = {
   todos: Todo[];
-  idTodoSelect: (userId: number) => void;
+  idTodoSelect: (todoId: number) => void;
+  selectedTodoId?: number;
+  deleteModal: () => void;
 };
 
-export const TodoList: React.FC<Props> = ({ todos, idTodoSelect }) => (
+export const TodoList: React.FC<Props> = ({
+  todos,
+  idTodoSelect,
+  selectedTodoId,
+  deleteModal,
+}) => (
   <table className="table is-narrow is-fullwidth">
     <thead>
       <tr>
@@ -24,9 +31,12 @@ export const TodoList: React.FC<Props> = ({ todos, idTodoSelect }) => (
 
     <tbody>
       {todos.map(todo => {
+        const isSelected = todo.id === selectedTodoId;
+
         return (
           <tr data-cy="todo" className="" key={todo.id}>
             <td className="is-vcentered">{todo.id}</td>
+
             <td className="is-vcentered">
               {todo.completed && (
                 <span className="icon" data-cy="iconCompleted">
@@ -34,6 +44,7 @@ export const TodoList: React.FC<Props> = ({ todos, idTodoSelect }) => (
                 </span>
               )}
             </td>
+
             <td className="is-vcentered is-expanded">
               <p
                 className={classNames({
@@ -44,15 +55,24 @@ export const TodoList: React.FC<Props> = ({ todos, idTodoSelect }) => (
                 {todo.title}
               </p>
             </td>
+
             <td className="has-text-right is-vcentered">
               <button
                 data-cy="selectButton"
                 className="button"
                 type="button"
-                onClick={() => idTodoSelect(todo.id)}
+                onClick={() => {
+                  if (isSelected) {
+                    deleteModal();
+                  } else {
+                    idTodoSelect(todo.id);
+                  }
+                }}
               >
                 <span className="icon">
-                  <i className="far fa-eye" />
+                  <i
+                    className={isSelected ? 'fas fa-eye-slash' : 'far fa-eye'}
+                  />
                 </span>
               </button>
             </td>

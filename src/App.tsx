@@ -9,14 +9,16 @@ import { TodoModal } from './components/TodoModal';
 import { Loader } from './components/Loader';
 import { Todo } from './types/Todo';
 import { getTodos, getUser } from './api';
-import { TodoModalType } from './types/TodoModal';
+import { User } from './types/User';
 
 export const App: React.FC = () => {
   const [todoFromServer, setTodoFromServer] = useState<Todo[]>([]);
   const [filterSelect, setFilter] = useState('all');
   const [queryFilter, setQueryFilter] = useState('');
   const [loading, setLoading] = useState(true);
-  const [todoDetailsUser, setTodoDetailsUser] = useState<TodoModalType>();
+
+  const [selectedTodo, setSelectedTodo] = useState<Todo>();
+  const [selectedUser, setSelectedUser] = useState<User>();
 
   const visibleTodos = todoFromServer.filter(todo => {
     const matchesStatus =
@@ -43,31 +45,31 @@ export const App: React.FC = () => {
     setQueryFilter('');
   };
 
-  const idTodoSelect = (postId: number): void => {
-    const todo = todoFromServer.find(tod => tod.id === postId);
-    const userId = todo?.userId;
+  const idTodoSelect = (todoId: number): void => {
+    const todo = todoFromServer.find(tod => tod.id === todoId);
 
     if (!todo) {
       return;
     }
 
-    getUser(userId!).then(user => {
-      setTodoDetailsUser({
-        todo,
-        user,
-      });
+    setSelectedTodo(todo);
+    setSelectedUser(undefined);
+
+    getUser(todo.userId).then(user => {
+      setSelectedUser(user);
     });
   };
 
   const deleteModal = () => {
-    setTodoDetailsUser(undefined);
+    setSelectedTodo(undefined);
+    setSelectedUser(undefined);
   };
 
   useEffect(() => {
-    setTimeout(() => {
+    getTodos().then(todos => {
+      setTodoFromServer(todos);
       setLoading(false);
-    }, 300);
-    getTodos().then(setTodoFromServer);
+    });
   }, []);
 
   return (
@@ -88,15 +90,26 @@ export const App: React.FC = () => {
 
             <div className="block">
               {loading && <Loader />}
+
               {!loading && (
-                <TodoList todos={visibleTodos} idTodoSelect={idTodoSelect} />
+                <TodoList
+                  todos={visibleTodos}
+                  idTodoSelect={idTodoSelect}
+                  selectedTodoId={selectedTodo?.id}
+                  deleteModal={deleteModal}
+                />
               )}
             </div>
           </div>
         </div>
       </div>
-      {todoDetailsUser && (
-        <TodoModal todo={todoDetailsUser} deleteModal={deleteModal} />
+
+      {selectedTodo && (
+        <TodoModal
+          todo={selectedTodo}
+          user={selectedUser}
+          deleteModal={deleteModal}
+        />
       )}
     </>
   );

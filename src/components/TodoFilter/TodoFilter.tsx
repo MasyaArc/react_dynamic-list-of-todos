@@ -14,7 +14,7 @@ export const TodoFilter: React.FC<Props> = ({
   <form className="field has-addons" onSubmit={event => event.preventDefault()}>
     <p className="control">
       <span className="select">
-        <select data-cy="statusSelect" onChange={even => filter(even)}>
+        <select data-cy="statusSelect" onChange={filter}>
           <option value="all">All</option>
           <option value="active">Active</option>
           <option value="completed">Completed</option>
@@ -27,22 +27,23 @@ export const TodoFilter: React.FC<Props> = ({
         data-cy="searchInput"
         type="text"
         className="input"
-        defaultValue=""
         value={query}
         placeholder="Search..."
-        onChange={event => search(event)}
+        onChange={search}
       />
+
       <span className="icon is-left">
         <i className="fas fa-magnifying-glass" />
       </span>
-      {!query && (
+
+      {query && (
         <span className="icon is-right" style={{ pointerEvents: 'all' }}>
           {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
           <button
             data-cy="clearSearchButton"
             type="button"
             className="delete"
-            onClick={() => resetQuery()}
+            onClick={resetQuery}
           />
         </span>
       )}

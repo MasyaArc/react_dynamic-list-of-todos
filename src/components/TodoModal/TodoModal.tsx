@@ -1,26 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Loader } from '../Loader';
-import { TodoModalType } from '../../types/TodoModal';
+import { Todo } from '../../types/Todo';
+import { User } from '../../types/User';
 
 type Props = {
-  todo: TodoModalType;
+  todo: Todo;
+  user?: User;
   deleteModal: () => void;
 };
 
-export const TodoModal: React.FC<Props> = ({ todo, deleteModal }) => {
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 300);
-  }, []);
-
+export const TodoModal: React.FC<Props> = ({ todo, user, deleteModal }) => {
   return (
     <div className="modal is-active" data-cy="modal">
       <div className="modal-background" />
 
-      {loading ? (
+      {!user ? (
         <Loader />
       ) : (
         <div className="modal-card">
@@ -29,7 +23,7 @@ export const TodoModal: React.FC<Props> = ({ todo, deleteModal }) => {
               className="modal-card-title has-text-weight-medium"
               data-cy="modal-header"
             >
-              Todo #{todo.todo.id}
+              Todo #{todo.id}
             </div>
 
             {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
@@ -37,26 +31,25 @@ export const TodoModal: React.FC<Props> = ({ todo, deleteModal }) => {
               type="button"
               className="delete"
               data-cy="modal-close"
-              onClick={() => deleteModal()}
+              onClick={deleteModal}
             />
           </header>
 
           <div className="modal-card-body">
             <p className="block" data-cy="modal-title">
-              {todo.todo.title}
+              {todo.title}
             </p>
 
             <p className="block" data-cy="modal-user">
-              {todo.todo.completed && (
+              {todo.completed ? (
                 <strong className="has-text-success">Done</strong>
-              )}
-              {!todo.todo.completed && (
+              ) : (
                 <strong className="has-text-danger">Planned</strong>
               )}
 
               {' by '}
 
-              <a href={`mailto:${todo.user.email}`}>{todo.user.name}</a>
+              <a href={`mailto:${user.email}`}>{user.name}</a>
             </p>
           </div>
         </div>
