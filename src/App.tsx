@@ -1,5 +1,5 @@
 /* eslint-disable max-len */
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import 'bulma/css/bulma.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 
@@ -7,8 +7,69 @@ import { TodoList } from './components/TodoList';
 import { TodoFilter } from './components/TodoFilter';
 import { TodoModal } from './components/TodoModal';
 import { Loader } from './components/Loader';
+import { Todo } from './types/Todo';
+import { getTodos, getUser } from './api';
+import { TodoModalType } from './types/TodoModal';
 
 export const App: React.FC = () => {
+  const [todoFromServer, setTodoFromServer] = useState<Todo[]>([]);
+  const [filterSelect, setFilter] = useState('all');
+  const [queryFilter, setQueryFilter] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [todoDetailsUser, setTodoDetailsUser] = useState<TodoModalType>();
+
+  const visibleTodos = todoFromServer.filter(todo => {
+    const matchesStatus =
+      filterSelect === 'all' ||
+      (filterSelect === 'active' && !todo.completed) ||
+      (filterSelect === 'completed' && todo.completed);
+
+    const matchesQuery = todo.title
+      .toLowerCase()
+      .includes(queryFilter.toLowerCase());
+
+    return matchesStatus && matchesQuery;
+  });
+
+  const handleFilter = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setFilter(event.target.value);
+  };
+
+  const search = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setQueryFilter(event.target.value);
+  };
+
+  const resetQuery = () => {
+    setQueryFilter('');
+  };
+
+  const idTodoSelect = (postId: number): void => {
+    const todo = todoFromServer.find(tod => tod.id === postId);
+    const userId = todo?.userId;
+
+    if (!todo) {
+      return;
+    }
+
+    getUser(userId!).then(user => {
+      setTodoDetailsUser({
+        todo,
+        user,
+      });
+    });
+  };
+
+  const deleteModal = () => {
+    setTodoDetailsUser(undefined);
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setLoading(false);
+    }, 300);
+    getTodos().then(setTodoFromServer);
+  }, []);
+
   return (
     <>
       <div className="section">
@@ -17,18 +78,26 @@ export const App: React.FC = () => {
             <h1 className="title">Todos:</h1>
 
             <div className="block">
-              <TodoFilter />
+              <TodoFilter
+                filter={handleFilter}
+                query={queryFilter}
+                search={search}
+                resetQuery={resetQuery}
+              />
             </div>
 
             <div className="block">
-              <Loader />
-              <TodoList />
+              {loading && <Loader />}
+              {!loading && (
+                <TodoList todos={visibleTodos} idTodoSelect={idTodoSelect} />
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      <TodoModal />
+      {todoDetailsUser && (
+        <TodoModal todo={todoDetailsUser} deleteModal={deleteModal} />
+      )}
     </>
   );
 };
